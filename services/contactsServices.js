@@ -1,4 +1,4 @@
-import Contact from "../models/Contact";
+import Contact from "../models/Contact.js";
 
 export async function listContacts() {
   return Contact.find();
@@ -16,6 +16,6 @@ export async function addContact(contact) {
   return Contact.create(contact);
 }
 
-export const updateContact = async (contactId, data) => {
+export async function updateContactById(contactId, data) {
   return Contact.findByIdAndUpdate(contactId, data);
-};
+}
