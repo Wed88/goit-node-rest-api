@@ -36,6 +36,7 @@ const login = async (req, res) => {
   };
 
   const token = createToken(payload);
+  await authServices.updateUser({ _id: id }, { token });
 
   res.json({
     token,
@@ -46,7 +47,25 @@ const login = async (req, res) => {
   });
 };
 
+const logout = async (req, res) => {
+  const { _id } = req.user;
+  await authServices.updateUser({ _id }, { token: "" });
+
+  res.status(204).json();
+};
+
+const getCurrent = (req, res) => {
+  const { email, subscription } = req.user;
+
+  res.json({
+    email,
+    subscription,
+  });
+};
+
 export default {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
+  getCurrent: ctrlWrapper(getCurrent),
+  logout: ctrlWrapper(logout),
 };
