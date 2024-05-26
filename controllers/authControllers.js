@@ -2,6 +2,7 @@ import * as authServices from "../services/authServices.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../decorators/ctrlWrapper.js";
 import compareHash from "../helpers/compareHash.js";
+import { createToken } from "../helpers/jwt.js";
 
 const register = async (req, res) => {
   const { email } = req.body;
@@ -29,10 +30,19 @@ const login = async (req, res) => {
     throw HttpError(401, "Email or password is wrong");
   }
 
-  const token = "1254.2151.5616";
+  const { _id: id } = user;
+  const payload = {
+    id,
+  };
+
+  const token = createToken(payload);
 
   res.json({
     token,
+    user: {
+      email: user.email,
+      subscription: user.subscription,
+    },
   });
 };
 
