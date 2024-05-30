@@ -4,6 +4,11 @@ import ctrlWrapper from "../decorators/ctrlWrapper.js";
 import compareHash from "../helpers/compareHash.js";
 import { createToken } from "../helpers/jwt.js";
 import gravatar from "gravatar";
+import path from "path";
+import fs from "fs/promises";
+import Jimp from "jimp";
+
+const AVATAR_PATH = path.resolve("public", "avatars");
 
 const register = async (req, res) => {
   const data = req.body;
@@ -64,9 +69,35 @@ const getCurrent = (req, res) => {
   });
 };
 
+const updateAvatar = async (req, res) => {
+  const { path: sourcePath, filename } = req.file;
+  const destinationPath = path.join(AVATAR_PATH, filename);
+  await saveConvertedImage(sourcePath, destinationPath);
+  await fs.unlink(sourcePath);
+
+  const { _id } = req.user;
+  const avatarURL = `${req.protocol}://${req.get(
+    "host"
+  )}/${"avatars"}/${filename}`;
+  await authServices.updateUser({ _id }, { avatarURL });
+
+  res.json({
+    avatarURL,
+  });
+};
+
+const saveConvertedImage = async (src, dest) => {
+  Jimp.read(src)
+    .then((image) => {
+      return image.resize(250, 250).write(dest);
+    })
+    .catch((err) => console.log(err.message));
+};
+
 export default {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };
