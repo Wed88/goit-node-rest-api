@@ -76,9 +76,7 @@ const updateAvatar = async (req, res) => {
   await fs.unlink(sourcePath);
 
   const { _id } = req.user;
-  const avatarURL = `${req.protocol}://${req.get(
-    "host"
-  )}/${"avatars"}/${filename}`;
+  const avatarURL = path.join("avatars", filename);
   await authServices.updateUser({ _id }, { avatarURL });
 
   res.json({

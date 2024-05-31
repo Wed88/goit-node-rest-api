@@ -5,6 +5,7 @@ import validateBody from "../helpers/validateBody.js";
 import { authRegisterSchema, authLoginSchema } from "../schemas/authSchemas.js";
 import authenticate from "../middlewares/authenticate.js";
 import upload from "../middlewares/upload.js";
+import isFileHere from "../middlewares/isFileHere.js";
 
 const authRouter = express.Router();
 
@@ -30,6 +31,7 @@ authRouter.patch(
   "/avatars",
   authenticate,
   upload.single("avatar"),
+  isFileHere,
   authControllers.updateAvatar
 );
 
