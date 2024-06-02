@@ -2,7 +2,11 @@ import express from "express";
 import authControllers from "../controllers/authControllers.js";
 import isEmptyBody from "../middlewares/isEmptyBody.js";
 import validateBody from "../helpers/validateBody.js";
-import { authRegisterSchema, authLoginSchema } from "../schemas/authSchemas.js";
+import {
+  authRegisterSchema,
+  authLoginSchema,
+  authEmailSchema,
+} from "../schemas/authSchemas.js";
 import authenticate from "../middlewares/authenticate.js";
 import upload from "../middlewares/upload.js";
 import isFileHere from "../middlewares/isFileHere.js";
@@ -17,6 +21,13 @@ authRouter.post(
 );
 
 authRouter.get("/verify/:verificationToken", authControllers.verify);
+
+authRouter.post(
+  "/verify",
+  isEmptyBody,
+  validateBody(authEmailSchema),
+  authControllers.resendVerify
+);
 
 authRouter.post(
   "/login",
