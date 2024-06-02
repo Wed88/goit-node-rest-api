@@ -7,6 +7,8 @@ import gravatar from "gravatar";
 import path from "path";
 import fs from "fs/promises";
 import Jimp from "jimp";
+import { nanoid } from "nanoid";
+import sendEmail from "../helpers/sendEmail.js";
 
 const AVATAR_PATH = path.resolve("public", "avatars");
 
@@ -17,11 +19,41 @@ const register = async (req, res) => {
     throw HttpError(409, "Email in use");
   }
 
+  const verificationToken = nanoid();
   const avatarURL = gravatar.url(data.email);
-  const newUser = await authServices.saveUser({ ...data, avatarURL });
+  const newUser = await authServices.saveUser({
+    ...data,
+    avatarURL,
+    verificationToken,
+  });
+
+  const verifyEmail = {
+    to: data.email,
+    subject: "Verify email",
+    html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}">Click verify email</a>`,
+  };
+
+  await sendEmail(verifyEmail);
 
   res.status(201).json({
     user: { email: newUser.email, subscription: newUser.subscription },
+  });
+};
+
+const verify = async (req, res) => {
+  const { verificationToken } = req.params;
+  const user = await authServices.findUser({ verificationToken });
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+
+  await authServices.updateUser(
+    { _id: user._id },
+    { verify: true, verificationToken: "N/A" }
+  );
+
+  res.json({
+    message: "Verification successful",
   });
 };
 
@@ -31,6 +63,11 @@ const login = async (req, res) => {
   if (!user) {
     throw HttpError(401, "Email or password is wrong");
   }
+
+  if (!user.verify) {
+    throw HttpError(401, "Email not verify");
+  }
+
   const comparePassword = await compareHash(password, user.password);
   if (!comparePassword) {
     throw HttpError(401, "Email or password is wrong");
@@ -94,6 +131,7 @@ const saveConvertedImage = async (src, dest) => {
 
 export default {
   register: ctrlWrapper(register),
+  verify: ctrlWrapper(verify),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
